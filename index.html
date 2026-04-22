@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mall Billing Software</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: flex-end;
+        }
+        .form-group div {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .total-section {
+            text-align: right;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mall Billing Dashboard</h1>
+
+        <div class="form-group">
+            <div>
+                <label for="itemName">Item Name</label>
+                <input type="text" id="itemName" placeholder="Enter item name">
+            </div>
+            <div>
+                <label for="itemQuantity">Quantity</label>
+                <input type="number" id="itemQuantity" placeholder="1" min="1" value="1">
+            </div>
+            <div>
+                <label for="itemPrice">Price ($)</label>
+                <input type="number" id="itemPrice" placeholder="0.00" min="0" step="0.01">
+            </div>
+            <div>
+                <button onclick="addItem()">Add Item</button>
+            </div>
+        </div>
+
+        <table id="billingTable">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Items will be added here dynamically -->
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            Grand Total: $<span id="grandTotal">0.00</span>
+        </div>
+    </div>
+
+    <script>
+        let grandTotal = 0;
+
+        function addItem() {
+            const nameInput = document.getElementById('itemName');
+            const quantityInput = document.getElementById('itemQuantity');
+            const priceInput = document.getElementById('itemPrice');
+
+            const name = nameInput.value.trim();
+            const quantity = parseInt(quantityInput.value);
+            const price = parseFloat(priceInput.value);
+
+            if (!name || isNaN(quantity) || quantity <= 0 || isNaN(price) || price < 0) {
+                alert('Please enter valid item details.');
+                return;
+            }
+
+            const itemTotal = quantity * price;
+
+            const tableBody = document.querySelector('#billingTable tbody');
+            const row = document.createElement('tr');
+
+            // Create cells to safely add text content
+            const nameCell = document.createElement('td');
+            nameCell.textContent = name;
+
+            const quantityCell = document.createElement('td');
+            quantityCell.textContent = quantity;
+
+            const priceCell = document.createElement('td');
+            priceCell.textContent = '$' + price.toFixed(2);
+
+            const totalCell = document.createElement('td');
+            totalCell.className = 'item-total';
+            totalCell.setAttribute('data-value', itemTotal);
+            totalCell.textContent = '$' + itemTotal.toFixed(2);
+
+            const actionCell = document.createElement('td');
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.style.backgroundColor = '#dc3545';
+            removeBtn.style.padding = '5px 10px';
+            removeBtn.style.fontSize = '14px';
+            removeBtn.onclick = function() { removeItem(this); };
+            actionCell.appendChild(removeBtn);
+
+            row.appendChild(nameCell);
+            row.appendChild(quantityCell);
+            row.appendChild(priceCell);
+            row.appendChild(totalCell);
+            row.appendChild(actionCell);
+
+            tableBody.appendChild(row);
+
+            updateGrandTotal(itemTotal);
+
+            // Clear inputs
+            nameInput.value = '';
+            quantityInput.value = '1';
+            priceInput.value = '';
+            nameInput.focus();
+        }
+
+        function removeItem(button) {
+            const row = button.closest('tr');
+            const itemTotalCell = row.querySelector('.item-total');
+            const itemTotal = parseFloat(itemTotalCell.getAttribute('data-value'));
+
+            updateGrandTotal(-itemTotal);
+
+            row.remove();
+        }
+
+        function updateGrandTotal(amount) {
+            grandTotal += amount;
+            // Prevent floating point precision issues
+            if (grandTotal < 0.01) grandTotal = 0;
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+        }
+    </script>
+</body>
+</html>
