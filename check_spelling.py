@@ -1,30 +1,31 @@
 import os
 import json
 import pandas as pd
-import google.generativeai as genai
+from google import genai
 from PIL import Image
+
+client = None
 
 def configure_gemini():
     """Configures the Gemini API using the environment variable."""
+    global client
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("Error: GEMINI_API_KEY environment variable not set.")
         print("Please set it using: export GEMINI_API_KEY='your_api_key'")
         return False
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
     return True
 
 def analyze_with_gemini(image_path, text_content):
     """Uses Gemini to compare the image and text, finding spelling mistakes."""
+    global client
     try:
         # Load the image
         img = Image.open(image_path)
     except Exception as e:
         print(f"Error loading image {image_path}: {e}")
         return []
-
-    # Choose a multimodal model
-    model = genai.GenerativeModel('gemini-1.5-flash')
 
     prompt = f"""
     You are an expert OCR proofreader. I am providing you with an image of text, and the corresponding text that was extracted from it via OCR.
@@ -47,7 +48,10 @@ def analyze_with_gemini(image_path, text_content):
     """
 
     try:
-        response = model.generate_content([prompt, img])
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[prompt, img]
+        )
         response_text = response.text.strip()
 
         # Clean up the response in case the model includes markdown formatting
@@ -73,7 +77,7 @@ def analyze_with_gemini(image_path, text_content):
         return []
 
 def process_folders(images_dir, texts_dir, output_excel_path):
-    """Matches images and texts, processes them, and saves to Excel."""
+    """Matches images and texts recursively, processes them, and saves to Excel."""
     if not os.path.isdir(images_dir):
         print(f"Error: Images directory not found: {images_dir}")
         return
@@ -84,16 +88,21 @@ def process_folders(images_dir, texts_dir, output_excel_path):
     all_logs = []
     valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.webp', '.tiff')
 
-    for image_filename in os.listdir(images_dir):
-        if image_filename.lower().endswith(valid_extensions):
-            name, _ = os.path.splitext(image_filename)
-            text_filename = f"{name}.txt"
+    for root, _, files in os.walk(images_dir):
+        for image_filename in files:
+            if image_filename.lower().endswith(valid_extensions):
+                name, _ = os.path.splitext(image_filename)
+                text_filename = f"{name}.txt"
 
-            image_path = os.path.join(images_dir, image_filename)
-            text_path = os.path.join(texts_dir, text_filename)
+                image_path = os.path.join(root, image_filename)
 
-            if os.path.exists(text_path):
-                print(f"Analyzing pair: {image_filename} & {text_filename}")
+                # Determine relative path to construct corresponding text path
+                rel_path = os.path.relpath(root, images_dir)
+                text_dir_path = os.path.join(texts_dir, rel_path) if rel_path != '.' else texts_dir
+                text_path = os.path.join(text_dir_path, text_filename)
+
+                if os.path.exists(text_path):
+                    print(f"Analyzing pair: {image_filename} & {text_filename}")
 
                 try:
                     with open(text_path, 'r', encoding='utf-8') as f:
@@ -116,7 +125,7 @@ def process_folders(images_dir, texts_dir, output_excel_path):
                 else:
                     print("  No mistakes found.")
             else:
-                print(f"Warning: No corresponding text file found for {image_filename}")
+                print(f"Warning: No corresponding text file found for {image_filename} in {text_dir_path}")
 
     if all_logs:
         df = pd.DataFrame(all_logs)
