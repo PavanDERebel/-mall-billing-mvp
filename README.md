@@ -52,7 +52,7 @@ python replacer.py
 ```
 *Note: Ensure you are authenticated with Application Default Credentials (ADC) via `gcloud auth application-default login` as it uses the modern `google-genai` SDK.*
 
-The script looks for matching `.jpeg` or `.jpg` files and `.txt` files in the folder specified within the script (look for `# folder path for pictures, text files`). It generates corrected copies like `1301_updated.txt` for an image `1301.jpeg` and its text `1301.txt`.
+The script looks for `.jpeg` or `.jpg` files in the image folder and corresponding `.txt` files in the text folder (these paths are specified within the script under `# folder path for pictures, text files`). It generates corrected copies like `1301_updated.txt` for an image `1301.jpeg` and its text `1301.txt`.
 
 **How to run:**
 ```bash

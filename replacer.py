@@ -4,24 +4,33 @@ from PIL import Image
 
 def process_files():
     # folder path for pictures, text files
-    folder_path = "./target_folder"
+    image_folder_path = r"D:\OCR\200E"
+    text_folder_path = r"C:\Users\PavanDRebel\Pictures\test ramya"
 
     client = genai.Client() # Requires GEMINI_API_KEY environment variable or Vertex AI setup
 
-    # Check if folder exists
-    if not os.path.isdir(folder_path):
-        print(f"Error: Folder '{folder_path}' does not exist.")
+    # Check if folders exist
+    if not os.path.isdir(image_folder_path):
+        print(f"Error: Image folder '{image_folder_path}' does not exist.")
+        return
+    if not os.path.isdir(text_folder_path):
+        print(f"Error: Text folder '{text_folder_path}' does not exist.")
         return
 
     # Find all jpegs and txts
     jpeg_files = set()
     txt_files = set()
 
-    for root, dirs, files in os.walk(folder_path):
+    # Walk image directory
+    for root, dirs, files in os.walk(image_folder_path):
         for file in files:
             if file.lower().endswith(('.jpeg', '.jpg')):
                 jpeg_files.add(os.path.join(root, file))
-            elif file.lower().endswith('.txt') and not file.lower().endswith('_updated.txt'):
+
+    # Walk text directory
+    for root, dirs, files in os.walk(text_folder_path):
+        for file in files:
+            if file.lower().endswith('.txt') and not file.lower().endswith('_updated.txt'):
                 txt_files.add(os.path.join(root, file))
 
     # Match files
@@ -33,8 +42,8 @@ def process_files():
 
     for jpeg_path in jpeg_files:
         base_name = os.path.splitext(os.path.basename(jpeg_path))[0]
-        # Using relative path to the base folder for mapping
-        rel_dir = os.path.relpath(os.path.dirname(jpeg_path), folder_path)
+        # Using relative path to the image folder for mapping
+        rel_dir = os.path.relpath(os.path.dirname(jpeg_path), image_folder_path)
         key = os.path.join(rel_dir, base_name) if rel_dir != '.' else base_name
 
         all_bases.add(key)
@@ -42,7 +51,8 @@ def process_files():
 
     for txt_path in txt_files:
         base_name = os.path.splitext(os.path.basename(txt_path))[0]
-        rel_dir = os.path.relpath(os.path.dirname(txt_path), folder_path)
+        # Using relative path to the text folder for mapping
+        rel_dir = os.path.relpath(os.path.dirname(txt_path), text_folder_path)
         key = os.path.join(rel_dir, base_name) if rel_dir != '.' else base_name
 
         all_bases.add(key)
