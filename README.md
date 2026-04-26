@@ -42,6 +42,18 @@ The script processes all common image formats and creates text files with the sa
 
 This script uses the Gemini API to compare the original image with the extracted text file. It identifies spelling mistakes and generates an Excel report.
 
+### 3. Correct Scrambled Text (`replacer.py`)
+
+This script uses the Gemini 2.5 Pro API to correct scrambled text extracted by Cloud Vision. It compares the original JPEG images with the scrambled text files and generates perfect, line-by-line corrected copies named `*_updated.txt`.
+
+**How to run:**
+```bash
+python replacer.py
+```
+*Note: Ensure you are authenticated with Application Default Credentials (ADC) via `gcloud auth application-default login` as it uses the modern `google-genai` SDK.*
+
+The script looks for matching `.jpeg` or `.jpg` files and `.txt` files in the folder specified within the script (look for `# folder path for pictures, text files`). It generates corrected copies like `1301_updated.txt` for an image `1301.jpeg` and its text `1301.txt`.
+
 **How to run:**
 ```bash
 python check_spelling.py
